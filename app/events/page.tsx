@@ -64,7 +64,7 @@ export default function EventsPage() {
         rightLabel="관심 브랜드"
       />
 
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-wrap gap-2">
         <Link
           href="/admin"
           className="inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white"
@@ -102,7 +102,7 @@ export default function EventsPage() {
       </section>
 
       <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-sm font-semibold text-slate-900">관심 브랜드</h2>
             <p className="mt-1 text-xs leading-5 text-slate-500">
@@ -110,7 +110,7 @@ export default function EventsPage() {
             </p>
           </div>
           {hydrated && favoriteBrands.length > 0 && (
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+            <span className="self-start rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
               {favoriteBrands.length}개 선택
             </span>
           )}

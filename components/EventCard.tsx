@@ -14,14 +14,18 @@ export default function EventCard({ event }: { event: EventItem }) {
       href={`/events/${event.id}`}
       className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
           <div className="text-xs font-medium text-slate-500">{brand?.name}</div>
-          <h3 className="mt-1 text-sm font-semibold leading-6 text-slate-900">{event.title}</h3>
+          <h3 className="mt-1 text-[15px] font-semibold leading-6 text-slate-900">{event.title}</h3>
         </div>
-        {status !== "ended" && <EventBadge label={label} status={status} />}
+        {status !== "ended" && (
+          <div className="shrink-0 self-start">
+            <EventBadge label={label} status={status} />
+          </div>
+        )}
       </div>
-      <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
         <span>{formatDate(event.startDate)}</span>
         <span>·</span>
         <span className="capitalize">{event.type}</span>
