@@ -52,7 +52,7 @@ export default function OnboardingPage() {
         disabled={!canContinue}
         className="mt-8 w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300"
       >
-        내 이벤트 보기
+        선택 완료
       </button>
     </main>
   );
