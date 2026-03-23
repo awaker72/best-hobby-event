@@ -24,7 +24,6 @@ export default function SettingsPage() {
   };
 
   const handleSave = () => {
-    if (selected.length === 0) return;
     setFavoriteBrands(selected);
     router.push("/events");
   };
@@ -32,8 +31,8 @@ export default function SettingsPage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-md px-5 py-8">
       <Header
-        title="관심 브랜드 설정"
-        subtitle="보고 싶은 브랜드만 골라 다시 정리할 수 있어요."
+        title="관심 브랜드"
+        subtitle="전체 이벤트 허브는 그대로 두고, 자주 보는 브랜드만 따로 저장할 수 있어요."
         backHref="/events"
       />
 
@@ -52,8 +51,7 @@ export default function SettingsPage() {
       <button
         type="button"
         onClick={handleSave}
-        disabled={selected.length === 0}
-        className="mt-8 w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+        className="mt-8 w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white"
       >
         저장하고 돌아가기
       </button>
