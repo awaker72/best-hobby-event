@@ -31,3 +31,28 @@ http://localhost:3000
 ```bash
 npm run build
 ```
+
+## 이미지 생성 파이프라인 (1차)
+이미지 API 키가 있으면 이벤트용 포스터 시안을 프로젝트 안에 바로 저장할 수 있습니다.
+
+### 준비
+`.env.local` 또는 실행 환경에 아래 값을 넣습니다.
+
+```bash
+GEMINI_API_KEY=your_api_key_here
+```
+
+### 프롬프트 파일
+예시 파일:
+
+```bash
+prompts/tspark-follow-event-poster.json
+```
+
+### 실행
+```bash
+npm run image:generate -- prompts/tspark-follow-event-poster.json
+```
+
+- `GEMINI_API_KEY`가 없으면 dry-run으로 프롬프트만 출력합니다.
+- 키가 있으면 결과 이미지를 `public/generated/posters/` 아래에 저장합니다.
