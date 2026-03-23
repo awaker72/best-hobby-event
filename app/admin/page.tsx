@@ -40,11 +40,18 @@ const eventTypes: { value: EventType; label: string }[] = [
   { value: "sns", label: "SNS" },
 ];
 
+const ADMIN_SESSION_KEY = "best-hobby-event:admin-auth";
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "";
+
 export default function AdminPage() {
   const [form, setForm] = useState<EventForm>(defaultForm);
   const [allEvents, setAllEvents] = useState<EventItem[]>([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const loadEvents = async () => {
     try {
@@ -58,11 +65,46 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    loadEvents();
+    const stored = window.localStorage.getItem(ADMIN_SESSION_KEY);
+    if (stored === "ok") {
+      setIsAuthorized(true);
+      loadEvents();
+    } else {
+      setLoading(false);
+    }
+    setAuthChecked(true);
   }, []);
 
   const handleChange = <K extends keyof EventForm>(key: K, value: EventForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
+  };
+
+  const handleLogin = (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!ADMIN_PASSWORD) {
+      setAuthError("관리자 비밀번호가 아직 설정되지 않았어요.");
+      return;
+    }
+
+    if (passwordInput === ADMIN_PASSWORD) {
+      window.localStorage.setItem(ADMIN_SESSION_KEY, "ok");
+      setIsAuthorized(true);
+      setAuthError("");
+      setLoading(true);
+      loadEvents();
+      return;
+    }
+
+    setAuthError("비밀번호가 맞지 않아요.");
+  };
+
+  const handleLogout = () => {
+    window.localStorage.removeItem(ADMIN_SESSION_KEY);
+    setIsAuthorized(false);
+    setPasswordInput("");
+    setAuthError("");
+    setMessage("");
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -89,11 +131,57 @@ export default function AdminPage() {
 
       setForm(defaultForm);
       setMessage("이벤트를 저장했어요. 이벤트 허브에 곧 반영돼요.");
+      setLoading(true);
       await loadEvents();
     } catch {
       setMessage("이벤트 저장에 실패했어요.");
     }
   };
+
+  if (!authChecked) {
+    return <main className="mx-auto min-h-screen w-full max-w-md px-5 py-8" />;
+  }
+
+  if (!isAuthorized) {
+    return (
+      <main className="mx-auto min-h-screen w-full max-w-md px-5 py-8">
+        <Header
+          title="관리자 로그인"
+          subtitle="관리자 페이지는 비밀번호를 입력한 뒤 접근할 수 있어요."
+          backHref="/events"
+        />
+
+        <form
+          onSubmit={handleLogin}
+          className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+        >
+          <label className="block">
+            <div className="mb-2 text-xs font-medium text-slate-500">관리자 비밀번호</div>
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-slate-400"
+              placeholder="비밀번호를 입력하세요"
+            />
+          </label>
+
+          {authError && <p className="mt-3 text-sm text-rose-600">{authError}</p>}
+
+          <button
+            type="submit"
+            className="mt-5 w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white"
+          >
+            관리자 페이지 들어가기
+          </button>
+
+          <p className="mt-4 text-xs leading-5 text-slate-500">
+            이 버전은 빠른 보호를 위한 간단한 비밀번호 게이트예요. 이후에는 정식 로그인으로 올리는 게 좋습니다.
+          </p>
+        </form>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-md px-5 py-8">
@@ -102,6 +190,16 @@ export default function AdminPage() {
         subtitle="새 이벤트를 직접 입력해서 Supabase에 저장할 수 있어요."
         backHref="/events"
       />
+
+      <div className="mb-4 flex justify-end">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm"
+        >
+          로그아웃
+        </button>
+      </div>
 
       <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between gap-3">
