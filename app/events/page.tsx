@@ -6,23 +6,35 @@ import EmptyState from "@/components/EmptyState";
 import EventCard from "@/components/EventCard";
 import Header from "@/components/Header";
 import { brands } from "@/data/brands";
-import { EventItem, events as baseEvents } from "@/data/events";
+import { EventItem } from "@/data/events";
 import { filterEventsByBrands, sortEventsByPriority } from "@/lib/filters";
-import { getFavoriteBrands, getMergedEvents, setFavoriteBrands } from "@/lib/storage";
+import { fetchPublishedEvents } from "@/lib/events";
+import { getFavoriteBrands, setFavoriteBrands } from "@/lib/storage";
 
 const ALL_FILTER = "all";
 
 export default function EventsPage() {
   const [selectedFilter, setSelectedFilter] = useState<string>(ALL_FILTER);
   const [favoriteBrands, setFavoriteBrandsState] = useState<string[]>([]);
-  const [allEvents, setAllEvents] = useState<EventItem[]>(baseEvents);
+  const [allEvents, setAllEvents] = useState<EventItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const favorites = getFavoriteBrands();
     setFavoriteBrandsState(favorites);
-    setAllEvents(getMergedEvents(baseEvents));
-    setHydrated(true);
+
+    fetchPublishedEvents()
+      .then((items) => {
+        setAllEvents(items);
+        setErrorMessage("");
+      })
+      .catch(() => {
+        setErrorMessage("이벤트를 불러오지 못했어요.");
+      })
+      .finally(() => {
+        setHydrated(true);
+      });
   }, []);
 
   const filteredEvents = useMemo(() => {
@@ -125,11 +137,15 @@ export default function EventsPage() {
         </div>
       </section>
 
+      {errorMessage && <p className="mb-4 text-sm text-rose-600">{errorMessage}</p>}
+
       <section className="space-y-4">
         {filteredEvents.length > 0 ? (
           filteredEvents.map((event) => <EventCard key={event.id} event={event} />)
-        ) : (
+        ) : hydrated ? (
           <EmptyState message="표시할 이벤트가 아직 없어요." />
+        ) : (
+          <EmptyState message="이벤트를 불러오는 중이에요." />
         )}
       </section>
     </main>

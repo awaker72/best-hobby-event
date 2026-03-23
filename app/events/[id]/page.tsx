@@ -1,17 +1,33 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Header from "@/components/Header";
 import { brands } from "@/data/brands";
-import { events as baseEvents } from "@/data/events";
-import { getMergedEvents } from "@/lib/storage";
+import { EventItem } from "@/data/events";
+import { fetchPublishedEvents } from "@/lib/events";
 import { formatDate } from "@/lib/utils";
 
 export default function EventDetailPage() {
   const params = useParams<{ id: string }>();
-  const allEvents = getMergedEvents(baseEvents);
-  const event = allEvents.find((item) => item.id === params.id);
+  const [event, setEvent] = useState<EventItem | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    fetchPublishedEvents()
+      .then((items) => {
+        const found = items.find((item) => item.id === params.id) ?? null;
+        setEvent(found);
+      })
+      .finally(() => {
+        setReady(true);
+      });
+  }, [params.id]);
+
+  if (!ready) {
+    return <main className="mx-auto min-h-screen w-full max-w-md px-5 py-8" />;
+  }
 
   if (!event) {
     return (

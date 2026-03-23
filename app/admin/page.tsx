@@ -1,10 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Header from "@/components/Header";
 import { brands } from "@/data/brands";
-import { EventItem, EventType, events as baseEvents } from "@/data/events";
-import { getCustomEvents, getMergedEvents, saveCustomEvent } from "@/lib/storage";
+import { EventItem, EventType } from "@/data/events";
+import { createEvent, fetchAllEvents } from "@/lib/events";
 import { formatDate } from "@/lib/utils";
 
 type EventForm = {
@@ -42,22 +42,30 @@ const eventTypes: { value: EventType; label: string }[] = [
 
 export default function AdminPage() {
   const [form, setForm] = useState<EventForm>(defaultForm);
-  const [savedCount, setSavedCount] = useState(0);
-  const [allEvents, setAllEvents] = useState<EventItem[]>(baseEvents);
+  const [allEvents, setAllEvents] = useState<EventItem[]>([]);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const loadEvents = async () => {
+    try {
+      const items = await fetchAllEvents();
+      setAllEvents(items);
+    } catch {
+      setMessage("이벤트 목록을 불러오지 못했어요.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setSavedCount(getCustomEvents().length);
-    setAllEvents(getMergedEvents(baseEvents));
+    loadEvents();
   }, []);
-
-  const customEvents = useMemo(() => getCustomEvents(), [savedCount]);
 
   const handleChange = <K extends keyof EventForm>(key: K, value: EventForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
   };
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
     if (!form.title || !form.startDate || !form.endDate || !form.summary || !form.description) {
@@ -65,31 +73,33 @@ export default function AdminPage() {
       return;
     }
 
-    const newEvent: EventItem = {
-      id: `custom-${Date.now()}`,
-      brand: form.brand,
-      title: form.title,
-      type: form.type,
-      startDate: form.startDate,
-      endDate: form.endDate,
-      summary: form.summary,
-      description: form.description,
-      howToJoin: form.howToJoin,
-      sourceUrl: form.sourceUrl,
-    };
+    try {
+      await createEvent({
+        title: form.title,
+        brand: form.brand,
+        type: form.type,
+        start_date: form.startDate,
+        end_date: form.endDate,
+        summary: form.summary,
+        description: form.description,
+        how_to_join: form.howToJoin,
+        source_url: form.sourceUrl,
+        is_published: true,
+      });
 
-    saveCustomEvent(newEvent);
-    setSavedCount(getCustomEvents().length);
-    setAllEvents(getMergedEvents(baseEvents));
-    setForm(defaultForm);
-    setMessage("이벤트를 저장했어요. 이벤트 허브에서 바로 확인할 수 있어요.");
+      setForm(defaultForm);
+      setMessage("이벤트를 저장했어요. 이벤트 허브에 곧 반영돼요.");
+      await loadEvents();
+    } catch {
+      setMessage("이벤트 저장에 실패했어요.");
+    }
   };
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-md px-5 py-8">
       <Header
         title="관리자 페이지"
-        subtitle="새 이벤트를 직접 입력해서 이벤트 허브에 반영할 수 있어요."
+        subtitle="새 이벤트를 직접 입력해서 Supabase에 저장할 수 있어요."
         backHref="/events"
       />
 
@@ -98,11 +108,11 @@ export default function AdminPage() {
           <div>
             <h2 className="text-sm font-semibold text-slate-900">저장 현황</h2>
             <p className="mt-1 text-xs leading-5 text-slate-500">
-              직접 추가한 이벤트는 현재 이 브라우저의 localStorage에 저장돼요.
+              이제 이벤트는 브라우저가 아니라 Supabase 데이터베이스에 저장돼요.
             </p>
           </div>
           <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
-            {savedCount}개 저장
+            {allEvents.length}개
           </span>
         </div>
       </section>
@@ -214,10 +224,12 @@ export default function AdminPage() {
       </form>
 
       <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-sm font-semibold text-slate-900">직접 추가한 이벤트</h2>
+        <h2 className="text-sm font-semibold text-slate-900">저장된 이벤트</h2>
         <div className="mt-4 space-y-3">
-          {customEvents.length > 0 ? (
-            customEvents.map((event) => {
+          {loading ? (
+            <p className="text-sm text-slate-500">이벤트를 불러오는 중이에요.</p>
+          ) : allEvents.length > 0 ? (
+            allEvents.map((event) => {
               const brand = brands.find((item) => item.id === event.brand);
               return (
                 <div key={event.id} className="rounded-2xl bg-slate-50 p-4">
@@ -230,14 +242,9 @@ export default function AdminPage() {
               );
             })
           ) : (
-            <p className="text-sm text-slate-500">아직 직접 추가한 이벤트가 없어요.</p>
+            <p className="text-sm text-slate-500">아직 저장된 이벤트가 없어요.</p>
           )}
         </div>
-      </section>
-
-      <section className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 text-xs leading-5 text-slate-500">
-        지금 버전의 관리자 기능은 브라우저 저장 기반이에요. 즉, 같은 브라우저에서는 바로 관리할 수 있지만,
-        다른 기기와 완전 동기화되는 정식 운영용 저장소는 다음 단계에서 붙이면 돼요.
       </section>
     </main>
   );
