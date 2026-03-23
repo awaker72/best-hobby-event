@@ -1,16 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import Header from "@/components/Header";
 import { brands } from "@/data/brands";
-import { events } from "@/data/events";
+import { events as baseEvents } from "@/data/events";
+import { getMergedEvents } from "@/lib/storage";
 import { formatDate } from "@/lib/utils";
 
-export default async function EventDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const event = events.find((item) => item.id === id);
+export default function EventDetailPage() {
+  const params = useParams<{ id: string }>();
+  const allEvents = getMergedEvents(baseEvents);
+  const event = allEvents.find((item) => item.id === params.id);
 
   if (!event) {
     return (
@@ -58,9 +59,9 @@ export default async function EventDetailPage({
           href={event.sourceUrl}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white! shadow-sm"
+          className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm"
         >
-          <span className="text-white!">원문 보기</span>
+          <span className="text-white">원문 보기</span>
         </Link>
       </section>
     </main>

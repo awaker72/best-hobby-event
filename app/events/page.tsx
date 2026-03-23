@@ -1,35 +1,38 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import EmptyState from "@/components/EmptyState";
 import EventCard from "@/components/EventCard";
 import Header from "@/components/Header";
 import { brands } from "@/data/brands";
-import { events } from "@/data/events";
+import { EventItem, events as baseEvents } from "@/data/events";
 import { filterEventsByBrands, sortEventsByPriority } from "@/lib/filters";
-import { getFavoriteBrands, setFavoriteBrands } from "@/lib/storage";
+import { getFavoriteBrands, getMergedEvents, setFavoriteBrands } from "@/lib/storage";
 
 const ALL_FILTER = "all";
 
 export default function EventsPage() {
   const [selectedFilter, setSelectedFilter] = useState<string>(ALL_FILTER);
   const [favoriteBrands, setFavoriteBrandsState] = useState<string[]>([]);
+  const [allEvents, setAllEvents] = useState<EventItem[]>(baseEvents);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const favorites = getFavoriteBrands();
     setFavoriteBrandsState(favorites);
+    setAllEvents(getMergedEvents(baseEvents));
     setHydrated(true);
   }, []);
 
   const filteredEvents = useMemo(() => {
     const base =
       selectedFilter === ALL_FILTER
-        ? events
-        : filterEventsByBrands(events, [selectedFilter]);
+        ? allEvents
+        : filterEventsByBrands(allEvents, [selectedFilter]);
 
     return sortEventsByPriority(base);
-  }, [selectedFilter]);
+  }, [allEvents, selectedFilter]);
 
   const toggleFavoriteBrand = (brandId: string) => {
     const next = favoriteBrands.includes(brandId)
@@ -48,6 +51,15 @@ export default function EventsPage() {
         rightHref="/settings"
         rightLabel="관심 브랜드"
       />
+
+      <div className="mb-4 flex gap-2">
+        <Link
+          href="/admin"
+          className="inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+        >
+          관리자 페이지
+        </Link>
+      </div>
 
       <section className="mb-4 flex gap-2 overflow-x-auto pb-1">
         <button
