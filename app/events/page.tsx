@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import EmptyState from "@/components/EmptyState";
 import EventCard from "@/components/EventCard";
 import Header from "@/components/Header";
@@ -63,15 +62,6 @@ export default function EventsPage() {
         rightHref="/settings"
         rightLabel="관심 브랜드"
       />
-
-      <div className="mb-4 flex flex-wrap gap-2">
-        <Link
-          href="/admin"
-          className="inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-        >
-          관리자 페이지
-        </Link>
-      </div>
 
       <section className="mb-4 flex gap-2 overflow-x-auto pb-1">
         <button
